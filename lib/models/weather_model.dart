@@ -6,13 +6,14 @@ class WeatherModel {
   double maxTemp;
   double minTemp;
   String StateName;
+  String CityName;
 
   WeatherModel(
       {required this.date,
       required this.temp,
       required this.maxTemp,
       required this.minTemp,
-      required this.StateName});
+      required this.StateName,required this.CityName});
 
   factory WeatherModel.fromJson(dynamic data) {
     return WeatherModel(
@@ -21,14 +22,16 @@ class WeatherModel {
         maxTemp: data["forecast"]["forecastday"][0]["day"]["maxtemp_c"],
         minTemp: data["forecast"]["forecastday"][0]["day"]["mintemp_c"],
         StateName: data["forecast"]["forecastday"][0]["day"]["condition"]
-            ["text"]);
+            ["text"],
+         CityName:data['location']['name']
+    );
   }
   @override
   String toString() {
     return 'temp=$temp,date=$date,maxTemp=$maxTemp,minTemp=$minTemp,StateName=$StateName)';
   }
 
-  String getImage() {
+  String? getImage() {
     if (StateName == 'Clear' || StateName == 'Light Cloud')
       return 'assets/images/clear.png';
     else if (StateName == 'Sunny')
