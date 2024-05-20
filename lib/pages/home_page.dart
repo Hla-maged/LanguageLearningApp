@@ -1,34 +1,23 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:project/cubits/get_weather_cubit/get_weather_cubit.dart';
+import 'package:project/cubits/get_weather_cubit/get_weather_states.dart';
 import 'package:project/models/weather_model.dart';
 import 'package:project/pages/search_page.dart';
-import 'package:project/provider/weatherProvider.dart';
-import 'package:provider/provider.dart';
 
-class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
-  @override
-  State<Home> createState() => _HomePage();
-}
-
-class _HomePage extends State<Home> {
-  void updateUi() {
-    setState(() {});
-  }
-
+class Home extends StatelessWidget {
   WeatherModel? DATA;
   @override
   Widget build(BuildContext context) {
-    DATA = Provider.of<WeatherProvider>(context).DATA;
+    // DATA = Provider.of<WeatherProvider>(context).DATA;
     return Scaffold(
         appBar: AppBar(
           actions: [
             IconButton(
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return SearchPage(
-                      updateUi: updateUi,
-                    );
+                    return SearchPage();
                   }));
                 },
                 icon: Icon(
@@ -38,74 +27,97 @@ class _HomePage extends State<Home> {
           ],
           title: Text('Weather App'),
         ),
-        body: Provider.of<WeatherProvider>(context).DATA == null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'There is no weather ! start',
-                      style: TextStyle(
-                        fontSize: 30,
-                      ),
-                    ),
-                    Text(
-                      'searching now 🔍',
-                      style: TextStyle(
-                        fontSize: 30,
-                      ),
-                    )
-                  ],
-                ),
+        body: BlocBuilder<GetWeatherCubit, WeatherState>(
+            builder: (context, state) {
+          if (state is NoweatherState) {
+            return NoWeather();
+          } else if (state is WloadedState) {
+            DATA = BlocProvider.of<GetWeatherCubit>(context).DATA;
+            return WeatherInfo();
+          } else {
+            return Text("opps, there was an error!");
+          }
+        }));
+  }
+}
+
+class WeatherInfo extends StatelessWidget {
+  WeatherModel? DATA;
+  @override
+  Widget build(BuildContext context) {
+    WeatherModel DATA = BlocProvider.of<GetWeatherCubit>(context).DATA!;
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+            (DATA.getColor()),
+            (DATA.getColor())[300]!,
+            (DATA.getColor())[50]!,
+          ])),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Spacer(
+            flex: 3,
+          ),
+          Text(
+            DATA.CityName,
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+          Text('Updated at: ${DATA.date}'),
+          Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Image.asset("${DATA.getImage()}"),
+              Text(
+                '${DATA.temp.toInt()}',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              Column(
+                children: [
+                  Text('Max Temp : ${DATA.maxTemp.toInt()}'),
+                  Text('Min Temp : ${DATA.minTemp.toInt()}'),
+                ],
               )
-            : Container(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                  DATA!.getColor(),
-                  DATA!.getColor()[300]!,
-                  DATA!.getColor()[100]!
-                ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Spacer(
-                      flex: 3,
-                    ),
-                    Text(
-                      Provider.of<WeatherProvider>(context).CityName!,
-                      style:
-                          TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                    Text('Updated at: ${DATA!.date}'),
-                    Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Image.asset(DATA!.getImage()),
-                        Text(
-                          '${DATA!.temp.toInt()}',
-                          style: TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                        Column(
-                          children: [
-                            Text('Max Temp : ${DATA!.maxTemp.toInt()}'),
-                            Text('Min Temp : ${DATA!.minTemp.toInt()}'),
-                          ],
-                        )
-                      ],
-                    ),
-                    Spacer(),
-                    Text(
-                      DATA!.StateName,
-                      style:
-                          TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                    Spacer(
-                      flex: 5,
-                    )
-                  ],
-                ),
-              ));
+            ],
+          ),
+          Spacer(),
+          Text(
+            DATA.StateName,
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+          Spacer(
+            flex: 5,
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class NoWeather extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'There is no weather ! start',
+          style: TextStyle(
+            fontSize: 30,
+          ),
+        ),
+        Text(
+          'searching now 🔍',
+          style: TextStyle(
+            fontSize: 30,
+          ),
+        )
+      ],
+    ));
   }
 }
